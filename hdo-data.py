@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 from datetime import datetime, timedelta, timezone
+import sys
 
 def dateIterator(start: datetime, notAfter: datetime, step: timedelta):
     i = start
@@ -102,7 +103,7 @@ def getTariffTableForNext (hdoCommand: int, days: int):
     # Prepare URL
     urlTemplate = "https://www.predistribuce.cz/cs/potrebuji-zaridit/zakaznici/stav-hdo/?povel=%d&den_od=%02d&mesic_od=%02d&rok_od=%d&den_do=%02d&mesic_do=%02d&rok_do=%d"
     url = urlTemplate % ( hdoCommand, requestStartDate.day, requestStartDate.month, requestStartDate.year, requestEndDate.day, requestEndDate.month, requestEndDate.year )
-    print("url = %s" % url)
+    #print("url = %s" % url)
 
     # Request HTML page
     response = requests.get(url)
@@ -148,8 +149,11 @@ def getTariffTableForNext (hdoCommand: int, days: int):
                     }
 
 
-for record in getTariffTableForNext(hdoCommand=568, days=14):
+arg_hdoCommand = int(sys.argv[1])
+arg_days = int(sys.argv[2]) if len(sys.argv) > 2 else 14
+
+for record in getTariffTableForNext(hdoCommand = arg_hdoCommand, days = arg_days):
     print("%s %s %s" % (record["start"].isoformat(), record["end"].isoformat(), record["tariff"]))
 
-
+# 568
 

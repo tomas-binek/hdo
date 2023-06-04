@@ -74,8 +74,8 @@ else
             array_map(
                 function ($record)
                 {
-                    $record->start = isoToUnixTimestamp($record->start);
-                    $record->end = isoToUnixTimestamp($record->end);
+                    $record->start = intval(isoToUnixTimestamp($record->start));
+                    $record->end = intval(isoToUnixTimestamp($record->end));
 
                     return $record;
                 },

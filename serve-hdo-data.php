@@ -22,6 +22,12 @@ function getCacheFilePath(int $command, int $days)
     return $cacheDir . '/command:'. $command . ',since:' . date('Y-m-d') . ',days:' . $days . '.txt';
 }
 
+function isoToUnixTimestamp (string $isoTimestamp)
+{
+    $dateObject = new DateTime($isoTimestamp);
+    return $dateObject->format('U');
+}
+
 if (! array_key_exists('command', $_GET))
     serve(400, "Missing 'command' argument");
 else if (! array_key_exists('days', $_GET))
@@ -30,6 +36,8 @@ else
 {
     $arg_command = intval($_GET['command']);
     $arg_days = intval($_GET['days']);
+    $arg_unixTime = array_key_exists('unixTime', $_GET);
+
     $cacheFile = getCacheFilePath($arg_command, $arg_days);
 
     if (! file_exists($cacheFile))
@@ -45,7 +53,7 @@ else
                 $cacheFile,
                 json_encode(
                     array_map(
-                        function ($line)
+                        function ($line) use ($arg_unixTime)
                         {
                             $lineAsObject = new stdClass();
                             list($lineAsObject->start, $lineAsObject->end, $lineAsObject->tariff) = explode(' ', $line);
@@ -58,5 +66,23 @@ else
         }
     }
 
-    serve(200, file_get_contents($cacheFile), 'application/json');
+    $data = file_get_contents($cacheFile);
+
+    if ($arg_unixTime)
+    {
+        $data = json_encode(
+            array_map(
+                function ($record)
+                {
+                    $record->start = isoToUnixTimestamp($record->start);
+                    $record->end = isoToUnixTimestamp($record->end);
+
+                    return $record;
+                },
+                json_decode($data)
+            )
+        );
+    }
+
+    serve(200, $data, 'application/json');
 }
